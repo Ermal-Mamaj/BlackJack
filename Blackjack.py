@@ -178,14 +178,13 @@ continue_playing = 'y'
 player_chips = Chips()
 
 #MAine game loop
+
+
 while continue_playing == 'y':
     print("\n","*" * 5, "Welcome to blackjack", "*" * 5)
     print("-" * 3, "Get as close to 21 as u can without going over!", 3 * "-")
 
-
-    takeBet(player_chips)
     reset_game()
-
 
     show_some(player_hand, dealer_hand)
 
