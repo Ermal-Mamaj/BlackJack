@@ -95,7 +95,7 @@ def hit_or_stand(deck, hand):
     global playing
 
     while True:
-        stay_or_hit = input("\n1. Hit\n2. Stay\n- ")
+        stay_or_hit = input("\n1. Draw Card\n2. Play\n- ")
         if stay_or_hit == '1':
             player_hits(deck, hand)
             show_some(player_hand, dealer_hand)
