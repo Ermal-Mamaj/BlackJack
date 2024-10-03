@@ -1,14 +1,43 @@
 import random
+import tkinter as tk
+from tkinter import messagebox
+from PIL import Image, ImageTk
 
-suits = ["Heart", "Diamond", "Spade", "Clubs"]
-ranks = ["Ace", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Jack", "Queen", "King"]
-value = {"Ace": 11, "Two": 2, "Three": 3, "Four": 4, "Five": 5, "Six": 6, "Seven": 7, "Eight": 8, "Nine": 9,
-         "Ten": 10, "Jack": 10, "Queen": 10, "King": 10}
 
-playing = True
+suits = ["Hearts", "Diamonds", "Spades", "Clubs"]
+ranks = ["ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"]
+value = {"ace": 11, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "10": 10, "jack": 10, "queen": 10, "king": 10}
 
-class Cards():
 
+root = tk.Tk()
+root.title("Blackjack Game")
+root.geometry("800x600")
+
+background_image = Image.open("table.png")
+background_image = background_image.resize((800, 600), Image.Resampling.LANCZOS)
+background_photo = ImageTk.PhotoImage(background_image)
+
+
+canvas = tk.Canvas(root, width=800, height=600)
+canvas.pack(fill="both", expand=True)
+canvas.create_image(0, 0, image=background_photo, anchor="nw")
+
+
+card_images = {}
+for suit in suits:
+    for rank in ranks:
+        card_name = f"{rank}_of_{suit}.png"
+        img = Image.open(f"images/{card_name}")
+        img = img.resize((100, 150), Image.Resampling.LANCZOS)
+        card_images[f"{rank} of {suit}"] = ImageTk.PhotoImage(img)
+
+
+question_mark_img = Image.open("question_mark.png")
+question_mark_img = question_mark_img.resize((100, 150), Image.Resampling.LANCZOS)
+question_mark_photo = ImageTk.PhotoImage(question_mark_img)
+
+
+class Cards:
     def __init__(self, suits, ranks):
         self.suits = suits
         self.ranks = ranks
@@ -16,27 +45,19 @@ class Cards():
     def __str__(self):
         return self.ranks + " of " + self.suits
 
-class Deck():
-    def __init__(self):
-        self.deck = []
-        for suit in suits:
-            for rank in ranks:
-                self.deck.append(Cards(suit, rank))
 
-    def __str__(self):
-        deck_comp = ""
-        for card in self.deck:
-            deck_comp += "\n" + card.__str__()
-        return "the deck has " + deck_comp
+class Deck:
+    def __init__(self):
+        self.deck = [Cards(suit, rank) for suit in suits for rank in ranks]
 
     def shuffle(self):
         random.shuffle(self.deck)
 
     def deal(self):
-        single_card = self.deck.pop()
-        return single_card
+        return self.deck.pop()
 
-class Hand():
+
+class Hand:
     def __init__(self):
         self.cards = []
         self.value = 0
@@ -46,7 +67,7 @@ class Hand():
     def addCard(self, card):
         self.cards.append(card)
         self.value += self.value_dict[card.ranks]
-        if card.ranks == "Ace":
+        if card.ranks == "ace":
             self.ace += 1
         self.adjustForAces()
 
@@ -55,7 +76,8 @@ class Hand():
             self.value -= 10
             self.ace -= 1
 
-class Chips():
+
+class Chips:
     def __init__(self):
         self.total = 100
         self.bet = 0
@@ -68,89 +90,185 @@ class Chips():
         self.total -= self.bet
         self.bet = 0
 
-def takeBet(chips):
 
-    while True:
+dealer_label = tk.Label(root, text="", font=("Arial", 14), bg="white", fg="white")
+canvas.create_window(400, 50, window=dealer_label)
+
+player_label = tk.Label(root, text="", font=("Arial", 14), bg="white", fg="white")
+canvas.create_window(400, 500, window=player_label)
+
+chips_label = tk.Label(root, text="", font=("Arial", 14, "bold"), bg="white", fg="black")
+canvas.create_window(400, 50, window=chips_label)
+
+dealer_card_frame = tk.Frame(root)
+canvas.create_window(400, 150, window=dealer_card_frame)
+
+player_card_frame = tk.Frame(root)
+canvas.create_window(400, 400, window=player_card_frame)
+
+button_frame = tk.Frame(root, bg="cyan")
+canvas.create_window(400, 550, window=button_frame)
+
+global hit_button, stand_button
+hit_button = tk.Button(button_frame, text="Hit", command=lambda: None,  fg="black", font=("Arial", 14, "bold"))
+hit_button.pack(side=tk.LEFT, padx=0, pady=0, fill=tk.BOTH, expand=True)
+
+stand_button = tk.Button(button_frame, text="Stand", command=lambda: None,  fg="black", font=("Arial", 14, "bold"))
+stand_button.pack(side=tk.LEFT, padx=0, pady=0, fill=tk.BOTH, expand=True)
+
+hit_button.config(state=tk.DISABLED)
+stand_button.config(state=tk.DISABLED)
+
+top_right_frame = tk.Frame(root, bg="white")
+canvas.create_window(750, 80, window=top_right_frame)
+
+def show_some(player, dealer):
+    for widget in dealer_card_frame.winfo_children():
+        widget.destroy()
+    for widget in player_card_frame.winfo_children():
+        widget.destroy()
+
+    dealer_first_card = tk.Label(dealer_card_frame, image=question_mark_photo)
+    dealer_first_card.pack(side=tk.LEFT)
+    dealer_second_card = tk.Label(dealer_card_frame, image=card_images[str(dealer.cards[1])])
+    dealer_second_card.pack(side=tk.LEFT)
+
+    for card in player.cards:
+        card_img = tk.Label(player_card_frame, image=card_images[str(card)])
+        card_img.pack(side=tk.LEFT)
+
+    chips_label.config(text=f"Chips: {player_chips.total}")
+
+def show_all(player, dealer):
+
+    for widget in dealer_card_frame.winfo_children():
+        widget.destroy()
+    for widget in player_card_frame.winfo_children():
+        widget.destroy()
+
+    # Dealer's hand
+    for card in dealer.cards:
+        card_img = tk.Label(dealer_card_frame, image=card_images[str(card)])
+        card_img.pack(side=tk.LEFT)
+
+
+    for card in player.cards:
+        card_img = tk.Label(player_card_frame, image=card_images[str(card)])
+        card_img.pack(side=tk.LEFT)
+
+    chips_label.config(text=f"Chips: {player_chips.total}")
+
+def take_bet_on_window():
+
+    for widget in top_right_frame.winfo_children():
+        widget.destroy()
+
+    def submit_bet():
         try:
-            print(f"\nYou have a total of {chips.total} chips")
-            chips.bet = int(input("How much do u want to bet?: "))
-            if chips.bet > chips.total:
-                print("Sorry u don't have that many chips left!")
+            bet = int(bet_entry.get())
+            if bet > player_chips.total:
+                messagebox.showinfo("Error", "Sorry, you don't have enough chips!")
+            elif bet <= 0:
+                messagebox.showinfo("Error", "Please enter a positive bet!")
             else:
-                chips.total -= chips.bet
-                break
+                player_chips.bet = bet
+                player_chips.total -= bet
+                chips_label.config(text=f"Chips: {player_chips.total}")
+                bet_entry.config(state=tk.DISABLED)
+                submit_bet_button.config(state=tk.DISABLED)
+                hit_button.config(state=tk.NORMAL)  # Enable 'Hit' and 'Stand' buttons after valid bet
+                stand_button.config(state=tk.NORMAL)
+                hit_or_stand(deck, player_hand)
         except ValueError:
-            print("A bet must be an integer!")
+            messagebox.showinfo("Error", "Please enter a valid number for the bet.")
+
+    global bet_entry
+    bet_entry = tk.Entry(top_right_frame, bg="white", highlightbackground="black", highlightthickness=4)
+    bet_entry.pack(pady=10, fill=tk.BOTH)
+
+    global submit_bet_button
+    submit_bet_button = tk.Button(top_right_frame, text="Submit Bet", command=submit_bet)
+    submit_bet_button.pack(pady=3, fill=tk.X, expand=True)
+
+
+
+def hit_or_stand(deck, hand):
+
+    def hit():
+        player_hits(deck, hand)
+        show_some(player_hand, dealer_hand)
+        if hand.value > 21:
+            player_busts(player_hand, dealer_hand, player_chips)
+
+    def stand():
+        dealer_hits(deck, dealer_hand)
+        show_all(player_hand, dealer_hand)
+
+        if dealer_hand.value > 21:
+            dealer_busts(player_hand, dealer_hand, player_chips)
+        elif dealer_hand.value > player_hand.value:
+            dealer_wins(player_hand, dealer_hand, player_chips)
+        elif player_hand.value > dealer_hand.value:
+            player_wins(player_hand, dealer_hand, player_chips)
+        else:
+            push(player_hand, dealer_hand)
+
+    hit_button.config(command=hit)
+    stand_button.config(command=stand)
+
 
 def player_hits(deck, hand):
     hand.addCard(deck.deal())
-    hand.adjustForAces()
+    show_some(player_hand, dealer_hand)
+
 
 def dealer_hits(deck, hand):
     while hand.value < 17:
-        player_hits(deck, hand)
+        hand.addCard(deck.deal())
     show_all(player_hand, dealer_hand)
 
-def hit_or_stand(deck, hand):
-    global playing
-
-    while True:
-        stay_or_hit = input("\n1. Draw Card\n2. Play\n- ")
-        if stay_or_hit == '1':
-            player_hits(deck, hand)
-            show_some(player_hand, dealer_hand)
-            if hand.value > 21:
-                playing = True
-                break
-        elif stay_or_hit == '2':
-            print("Player stays, dealer is playing!")
-            playing = True
-            break
-        else:
-            print("Invalid input. Please enter 1 or 2.")
-
-def show_some(player, dealer):
-    print("\nDealer's hand:")
-    print("**Hidden card**")
-    print("-", dealer.cards[1])
-    print("\nPlayer's hand:", *[(f"- {card}") for card in player.cards], sep="\n")
-
-def show_all(player, dealer):
-    print("\nDealer's hand : ", *dealer.cards, sep="\n")
-    print("Dealer's hand value : ", dealer.value)
-    print("\nPlayer's hand:", *[(f"- {card}") for card in player.cards], sep="\n")
-    print("Player's hand value : ", player.value,"\n")
 
 def player_busts(player, dealer, chips):
-    print(f"The total values of you cards is {player_hand.value}")
-    print("You bust!")
-    print(f"You have {player_chips.total} left")
-    global  playing
-    playing = False
+    messagebox.showinfo("Game Over", "You bust!")
+    reset_game()
+
 
 def player_wins(player, dealer, chips):
-    print(f"Dealer has {dealer_hand.value} and you have {player_hand.value} ")
-    print("You win!")
+    messagebox.showinfo("Game Over", "You win!")
     chips.winBet()
+    reset_game()
+
 
 def dealer_busts(player, dealer, chips):
-    print(f"Dealers total values of theire cards is {dealer_hand.value}")
-    print("Dealer busts!")
+    messagebox.showinfo("Game Over", "Dealer busts, you win!")
     chips.winBet()
+    reset_game()
+
 
 def dealer_wins(player, dealer, chips):
-    print(f"Dealer has {dealer_hand.value} and you have {player_hand.value} ")
-    print("Dealer Wins")
+    messagebox.showinfo("Game Over", "Dealer wins!")
+    reset_game()
 
-def push(player, dealer, chips):
-    print(f"Dealer has {dealer_hand.value} and you have {player_hand.value} ")
-    print("You both have the same result!")
-    print("It's a push!")
+
+def push(player, dealer):
+    messagebox.showinfo("Game Over", "It's a push!")
+    reset_game()
+
+def show_result(message):
+    messagebox.showinfo("Game Over", message)
+    if player_chips.total > 0:
+        reset_game()
+    else:
+        end_game()
+
+
+
 
 def reset_game():
-    global playing, player_hand, dealer_hand
-    global deck
-    playing = True
+    global deck, player_hand, dealer_hand
+    hit_button.config(state=tk.DISABLED)
+    stand_button.config(state=tk.DISABLED)
+
     deck = Deck()
     deck.shuffle()
     player_hand = Hand()
@@ -159,69 +277,31 @@ def reset_game():
     dealer_hand = Hand()
     dealer_hand.addCard(deck.deal())
     dealer_hand.addCard(deck.deal())
-    takeBet(player_chips)
-
-def play_again():
-    global continue_playing , player_chips
-    while True:
-        continue_playing = input("Do you want to continue playing (y/n): ").lower()
-        if continue_playing == 'y':
-            break
-        elif continue_playing == 'n':
-            print(f'Congrats u won {player_chips.total}')
-            break
-        else:
-            print("Invalid input. Please enter 'y' or 'n'.")
-
-global deck
-continue_playing = 'y'
-player_chips = Chips()
-
-#MAine game loop
-
-
-while continue_playing == 'y':
-    print("\n","*" * 5, "Welcome to blackjack", "*" * 5)
-    print("-" * 3, "Get as close to 21 as u can without going over!", 3 * "-")
-
-    reset_game()
 
     show_some(player_hand, dealer_hand)
+    take_bet_on_window()
+    end_game_button = tk.Button(top_right_frame, text="End Game", command=end_game)
+    end_game_button.pack(fill= tk.X, expand=True)
 
-    while playing:
-        hit_or_stand(deck, player_hand)
+    if player_chips.total == 0:
+        messagebox.showinfo("Defeat!","You dont have any more chips left")
+        quit()
 
-        if player_hand.value > 21:
-            playing = False
-            player_busts(player_hand, dealer_hand, player_chips)
-            if player_chips.total == 0:
-                print("\nThanks for playing!")
-                quit()
-            else:
-                play_again()
-            break
-        elif not playing:
-            dealer_hits(deck, dealer_hand)
-        elif player_hand.value <= 21:
-            playing = False
-            dealer_hits(deck, dealer_hand)
-        if dealer_hand.value <= 21:
-            if dealer_hand.value > player_hand.value:
-                playing = False
-                dealer_wins(player_hand, dealer_hand, player_chips)
-            elif player_hand.value > dealer_hand.value:
-                playing = False
-                player_wins(player_hand, dealer_hand, player_chips)
-            elif player_hand.value == dealer_hand.value:
-                playing = False
-                push(player_hand, dealer_hand, player_chips)
-        else:
-            playing = False
-            dealer_busts(player_hand, dealer_hand, player_chips)
 
-        print("You have", player_chips.total, "chips left!")
 
-        if continue_playing == 'n' or player_chips.total == 0:
-            print("Thanks for playing!")
-            break
-        play_again()
+
+def end_game():
+    chips_after_game = player_chips.total - 100
+    if chips_after_game > 0:
+        messagebox.showinfo("Game Over", f"You have won {chips_after_game} chips!")
+        root.after(100, root.quit)
+    else:
+        chips_after_game = chips_after_game * (-1)
+        messagebox.showinfo("Game Over", f"You have lost {chips_after_game} chips!")
+
+
+
+
+player_chips = Chips()
+reset_game()
+root.mainloop()
