@@ -163,6 +163,10 @@ def take_bet_on_window():
     for widget in top_right_frame.winfo_children():
         widget.destroy()
 
+    bet_label = tk.Label(top_right_frame, text="Enter your bet", font=("Arial", 10, "bold"), bg="white", fg="black")
+    bet_label.pack(pady=5)
+    bet_label = tk.Label(top_right_frame, text="to start playing:", font=("Arial", 10, "bold"), bg="white", fg="black")
+    bet_label.pack(pady=5)
     def submit_bet():
         try:
             bet = int(bet_entry.get())
