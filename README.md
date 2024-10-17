@@ -1,4 +1,6 @@
 #Blackjack Game with GUI and SQLite3
+
+
 Overview
 This project is a Blackjack game built using Python's Tkinter library for the graphical user interface (GUI) and SQLite3 for managing player data and game statistics. The game allows players to place bets, interact with the dealer, and track their chips and progress across sessions.
 
